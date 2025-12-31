@@ -4,8 +4,7 @@
 
 import { FastifyInstance } from 'fastify';
 import { db } from '@signals/db';
-import { aiJobs, aiOutputs, incidents } from '@signals/db/schema';
-import { eq, desc, sql, gte } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 
 export async function aiRoutes(app: FastifyInstance) {
   /**
@@ -35,7 +34,7 @@ export async function aiRoutes(app: FastifyInstance) {
         return acc;
       }, {} as Record<string, number>);
 
-      const totalJobs = Object.values(jobsByStatus).reduce((a: number, b: number) => a + b, 0);
+      const totalJobs = Object.values(jobsByStatus).reduce((a, b) => a + b, 0);
       const successRate = totalJobs > 0
         ? ((jobsByStatus['succeeded'] || 0) / totalJobs) * 100
         : 0;
