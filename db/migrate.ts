@@ -11,12 +11,15 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Pool } from 'pg';
 
 async function runMigrations() {
-  // Prefer DATABASE_PRIVATE_URL (VPC) over DATABASE_URL (public)
-  const connectionString = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL;
+  // Use DATABASE_URL from App Platform binding (automatically uses VPC when available)
+  // Fall back to DATABASE_PRIVATE_URL for local development with VPC access
+  const connectionString = process.env.DATABASE_URL || process.env.DATABASE_PRIVATE_URL;
   if (!connectionString) {
-    console.error('DATABASE_URL or DATABASE_PRIVATE_URL environment variable is required');
+    console.error('DATABASE_URL environment variable is required');
     process.exit(1);
   }
+
+  console.log('Using connection:', connectionString.replace(/:[^:@]+@/, ':****@'));
 
   console.log('Connecting to database...');
 
