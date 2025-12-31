@@ -22,11 +22,8 @@ RUN npm ci
 FROM base AS builder
 WORKDIR /app
 
-# Copy node_modules from deps stage
+# Copy node_modules from deps stage (npm workspaces hoists to root)
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages/shared-types/node_modules ./packages/shared-types/node_modules
-COPY --from=deps /app/db/node_modules ./db/node_modules
-COPY --from=deps /app/services/indexer/node_modules ./services/indexer/node_modules
 
 # Copy source code
 COPY tsconfig.base.json ./
