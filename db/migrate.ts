@@ -41,9 +41,17 @@ async function runMigrations() {
   console.log('Migration files found:', migrationFiles.join(', '));
 
   console.log('Connecting to database...');
+
+  // DigitalOcean managed databases use self-signed certificates
+  // We need to strip sslmode from URL and configure ssl separately
+  const urlWithoutSslMode = connectionString.replace(/[?&]sslmode=\w+/g, '').replace(/\?$/, '');
+  console.log('Connection (cleaned):', urlWithoutSslMode.replace(/:[^:@]+@/, ':****@'));
+
   const pool = new Pool({
-    connectionString,
-    ssl: process.env.PG_SSLMODE === 'disable' ? false : { rejectUnauthorized: false },
+    connectionString: urlWithoutSslMode,
+    ssl: {
+      rejectUnauthorized: false, // Accept DigitalOcean's self-signed certificate
+    },
     connectionTimeoutMillis: 10000,
   });
 
