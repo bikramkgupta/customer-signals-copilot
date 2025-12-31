@@ -30,7 +30,9 @@ async function runMigrations() {
   console.log('Running migrations...');
 
   try {
-    await migrate(db, { migrationsFolder: './migrations' });
+    // Path is relative to cwd - in Docker it runs from /app so we need db/migrations
+    const migrationsFolder = process.env.MIGRATIONS_FOLDER || './db/migrations';
+    await migrate(db, { migrationsFolder });
     console.log('Migrations completed successfully!');
   } catch (error) {
     console.error('Migration failed:', error);
