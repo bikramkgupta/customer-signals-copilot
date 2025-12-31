@@ -22,8 +22,9 @@ RUN npm ci
 FROM base AS builder
 WORKDIR /app
 
-# Copy node_modules and package files from deps stage
+# Copy node_modules from deps stage (root + workspace-specific)
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/services/core-api/node_modules ./services/core-api/node_modules
 COPY --from=deps /app/package.json /app/package-lock.json ./
 
 # Copy source code
@@ -48,8 +49,9 @@ ENV PORT=3001
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 appuser
 
-# Copy built files
+# Copy built files (root node_modules + workspace-specific)
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/services/core-api/node_modules ./services/core-api/node_modules
 COPY --from=builder /app/packages/shared-types/dist ./packages/shared-types/dist
 COPY --from=builder /app/packages/shared-types/package.json ./packages/shared-types/
 COPY --from=builder /app/db/dist ./db/dist

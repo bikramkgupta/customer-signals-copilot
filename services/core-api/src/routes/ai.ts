@@ -29,12 +29,12 @@ export async function aiRoutes(app: FastifyInstance) {
       `);
 
       const stats = statsResult.rows[0] as any;
-      const jobsByStatus = (jobsResult.rows as any[]).reduce((acc, row) => {
-        acc[row.status] = Number(row.count);
-        return acc;
-      }, {} as Record<string, number>);
+      const jobsByStatus: Record<string, number> = {};
+      for (const row of jobsResult.rows as any[]) {
+        jobsByStatus[row.status] = Number(row.count);
+      }
 
-      const totalJobs = Object.values(jobsByStatus).reduce((a, b) => a + b, 0);
+      const totalJobs = Object.values(jobsByStatus).reduce<number>((a, b) => a + b, 0);
       const successRate = totalJobs > 0
         ? ((jobsByStatus['succeeded'] || 0) / totalJobs) * 100
         : 0;
