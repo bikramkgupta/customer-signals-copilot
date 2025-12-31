@@ -64,5 +64,5 @@ USER nextjs
 
 EXPOSE 3002
 
-# Next.js standalone server
-CMD ["node", "apps/dashboard/server.js"]
+# Next.js standalone server (server.js is at root of standalone output)
+CMD ["node", "server.js"]
