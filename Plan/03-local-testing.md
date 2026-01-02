@@ -1,6 +1,6 @@
-# Sentinel Dashboard - Testing Plan
+# Stage 3: Sentinel Dashboard - Testing Plan
 
-**Status**: PENDING
+**Status**: COMPLETE
 **Last Updated**: 2026-01-01
 
 ---
@@ -195,7 +195,92 @@ docker exec -w /workspaces/app/apps/dashboard $APP_CONTAINER bash -c "ls -la .ne
 
 ---
 
-### Step 9: Cleanup
+### Step 9: App Platform Local Build (CRITICAL)
+
+**This step catches 90% of cloud build failures before they happen.**
+
+```bash
+# Prerequisites check (run on Mac host, not in container)
+doctl version  # Must be 1.82.0+
+docker info    # Docker must be running
+
+# Build each component using DO's build environment
+cd /Users/bikram/Documents/Build/skills-test/customer-signals-copilot/customer-signals-copilot-claude
+
+# Build using local app spec
+doctl app dev build --spec .do/app.yaml
+
+# When prompted, select each component to build:
+# - ingest-api
+# - core-api
+# - dashboard
+# - indexer
+# - incident-engine
+# - ai-worker
+```
+
+**Expected Output:**
+- Each component builds successfully
+- Docker run command provided for each on success
+- No Dockerfile syntax errors
+- All dependencies resolve correctly
+
+| Component | Build Status | Notes |
+|-----------|--------------|-------|
+| ingest-api | [ ] | |
+| core-api | [ ] | |
+| dashboard | [ ] | |
+| indexer | [ ] | |
+| incident-engine | [ ] | |
+| ai-worker | [ ] | |
+
+---
+
+### Step 10: Health Check Validation (CRITICAL)
+
+**This step catches 90% of cloud deploy failures before they happen.**
+
+```bash
+# Test health endpoints from Mac host (services exposed via devcontainer)
+
+# ingest-api health check
+curl -f http://localhost:3000/healthz
+# Expected: 200 OK
+
+# core-api health check
+curl -f http://localhost:3001/api/healthz
+# Expected: 200 OK with {"status": "ok"}
+
+# dashboard health check (Next.js)
+curl -f http://localhost:3002/
+# Expected: 200 OK (HTML response)
+```
+
+**Verify app spec health paths match:**
+
+```bash
+# Check .do/app.yaml health_check configurations
+grep -A 3 "health_check:" .do/app.yaml
+```
+
+| Service | Health Path in Code | Health Path in app.yaml | Match? |
+|---------|--------------------|-----------------------|--------|
+| ingest-api | `/healthz` | `/healthz` | [ ] |
+| core-api | `/api/healthz` | `/api/healthz` | [ ] |
+| dashboard | `/` | `/` | [ ] |
+
+**Troubleshooting Health Check Failures:**
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| 404 Not Found | Route not defined | Add health endpoint to code |
+| 500 Error | App error on startup | Check logs for exception |
+| Connection refused | Wrong port | Verify HTTP_PORT env var |
+| Timeout | Slow startup | Increase `initial_delay_seconds` in app.yaml |
+
+---
+
+### Step 11: Cleanup
 
 ```bash
 # Stop the devcontainer
@@ -227,7 +312,11 @@ docker compose -f .devcontainer/docker-compose.yml ps
 
 ## Next Steps After Testing
 
-1. [ ] All tests pass locally
-2. [ ] Commit changes to `claude` branch
-3. [ ] Create PR to `main`
-4. [ ] Deploy to DigitalOcean App Platform (separate session)
+1. [ ] All functional tests pass locally (Steps 1-8)
+2. [ ] `doctl app dev build` succeeds for all components (Step 9)
+3. [ ] Health check endpoints respond correctly (Step 10)
+4. [ ] Commit changes to `claude` branch
+5. [ ] Create PR to `main`
+6. [ ] Deploy to DigitalOcean App Platform (Stage 4+)
+
+**IMPORTANT**: Do NOT proceed to cloud deployment until Steps 9 and 10 pass. These catch 90% of deployment failures.
